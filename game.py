@@ -5,6 +5,7 @@ from pygame.locals import *
 from sys import exit
 import random
 import os
+import profile
 
 #import all the sources
 background_image_filename='sources/background.jpg'
@@ -131,7 +132,7 @@ def show():
                 screen.blit(houses[2],(q.x,q.y+30))
             elif(q.grade==3):
                 screen.blit(houses[3],(q.x,q.y+30))
-        
+
 
 def show_pos(a):
     for p in players:
@@ -146,145 +147,138 @@ def input(event):
             return 'left'
         elif event.key==K_RIGHT:
             return 'right'
-    
+
 def easy():
     show()
     show_pos(0)
     pygame.display.update()
 
 
+def main():
+    speed=250
+    error=1.5
+    question=(150,350)
+    question2=(150,350+font_height)
+    question1=(110,350)
+    question3=(150,350+font_height*2)
 
-speed=250
-error=1.5
-question=(150,350)
-question2=(150,350+font_height)
-question1=(110,350)
-question3=(150,350+font_height*2)
+    easy()
+    screen.blit(font.render("click the mouse to throw the dice",True,(0,0,0)),question)
+    screen.blit(font.render("the top left will show the number ",True,(0,0,0)),question2)
 
-easy()
-screen.blit(font.render("click the mouse to throw the dice",True,(0,0,0)),question)
-screen.blit(font.render("the top left will show the number ",True,(0,0,0)),question2)
+    clock = pygame.time.Clock()
 
-clock = pygame.time.Clock()
-
-change=0
-player=players[0]
+    change=0
+    player=players[0]
 #开始游戏！
-while a.money>-a.overdraft and b.money>-b.overdraft:
-    for event in pygame.event.get():
-        
-        if event.type==QUIT:
-            exit()
-        elif event.type==MOUSEBUTTONDOWN:
-            dice=random.randint(1,6)
-            player=players[change]
-            change=1-change
-            
-            
-            
-            #移动
-            player.x=road[player.position].x
-            player.y=road[player.position].y
+    while a.money>-a.overdraft and b.money>-b.overdraft:
+        for event in pygame.event.get():
 
-            player.position+=dice
-            if(player.position>23):
-                player.position-=24
-            
-        
-            clock = pygame.time.Clock()
-            #move
-            while (abs(player.x-road[player.position].x)>error or abs(player.y-road[player.position].y)>error):
-
-                show()
-                show_pos(player)
-                screen.blit(font_dice.render(str(dice),True,(0,0,0)),(150,130))
-                screen.blit(player.person,(player.x,player.y))
-                time_passed=clock.tick()
-                time_passed_seconds=time_passed/1000.0
-                distance_moved = time_passed_seconds*speed
-                
-                if(abs(player.y-0)<error and player.x<480):
-                    player.x+=distance_moved
-                if(abs(player.x-480)<error and player.y<480):
-                    player.y+=distance_moved
-                if(abs(player.y-480)<error and player.x>0):
-                    player.x-=distance_moved
-                if(abs(player.x-0)<error and player.y>0):
-                    player.y-=distance_moved
-
-                pygame.display.update()
-            
-
-            easy()
-
-            
-            if(road[player.position].__class__==supermarket):
-                screen.blit(font.render("what do you want to buy? ",True,(0,0,0)),question)
-                screen.blit(font.render("diamond <- or star ->",True,(0,0,0)),question2)
-                pygame.display.update()
-            elif(road[player.position].__class__==bank):
-                player.get()
-                
-            elif(road[player.position].area.owner==0 and player.money>=road[player.position].money and player.diamond>=road[player.position].diamond):
-                screen.blit(font.render("Do you want buy the area with",True,(0,0,0)),question)
-                screen.blit(font.render('$ '+str(road[player.position].money)+" and "+str(road[player.position].diamond)+" diamonds?",True,(0,0,0)),question2)
-                screen.blit(font.render("Press Y if you would like to ",True,(0,0,0)),question3)
-                pygame.display.update()
-            elif(road[player.position].area.owner!=0 and road[player.position].area.owner!=player):
-                screen.blit(font.render("You must pay "+str(road[player.position].area.owner.name)+" "+str(road[player.position].grade*100),True,(0,0,0)),question)
-                player.pay(road[player.position].area.owner,road[player.position])
-                pygame.display.update()
-                
-            elif(road[player.position].area.owner==player and road[player.position].grade==0):
-                screen.blit(font.render("Do you want build house with $200? ",True,(0,0,0)),question1)
-                screen.blit(font.render("Press Y if you would like to ",True,(0,0,0)),question2)
-                pygame.display.update()
-            elif(road[player.position].area.owner==player and road[player.position].grade>0):
-                screen.blit(font.render("Do you want upgrade the house? ",True,(0,0,0)),question1)
-                screen.blit(font.render("Press Y if you would like to ",True,(0,0,0)),question2)
-                pygame.display.update()
-                
-                
-        elif event.type==KEYDOWN:
-            if(road[player.position].__class__==supermarket):
-                screen.blit(font.render("what do you want to buy? ",True,(0,0,0)),question)
-                screen.blit(font.render("diamond <- or star ->",True,(0,0,0)),question2)
-                pygame.display.update()
-                ans1=(input(event)=='left')
-                ans2=(input(event)=='right')
-                player.buy_goods(ans1,ans2)
-            elif(road[player.position].area.owner==0 and player.money>=road[player.position].money and player.diamond>=road[player.position].diamond):
-                screen.blit(font.render("Do you want buy the area with",True,(0,0,0)),question)
-                screen.blit(font.render('$ '+str(road[player.position].money)+" and "+str(road[player.position].diamond)+" diamonds?",True,(0,0,0)),question2)
-                screen.blit(font.render("Press Y if you would like to ",True,(0,0,0)),question3)
-                pygame.display.update()
-                ans=(input(event)=='y')
-                player.buy_cell(road[player.position],ans)
-            elif(road[player.position].area.owner==player  and road[player.position].grade==0):
-                screen.blit(font.render("Do you want build house with $200 ? ",True,(0,0,0)),question1)
-                screen.blit(font.render("Press Y if you would like to ",True,(0,0,0)),question2)
-                ans=(input(event)=='y')
-                player.build(road[player.position],ans)
-            elif(road[player.position].area.owner==player and road[player.position].grade>0):
-                screen.blit(font.render("Do you want upgrade the house? ",True,(0,0,0)),question1)
-                screen.blit(font.render("Press Y if you would like to ",True,(0,0,0)),question2)
-                ans=(input(event)=='y')
-                player.upgrade(road[player.position],ans)
-            easy()
-            
-
-        else:
-            continue
-                
-                
-            
+            if event.type==QUIT:
+                exit()
+            elif event.type==MOUSEBUTTONDOWN:
+                dice=random.randint(1,6)
+                player=players[change]
+                change=1-change
 
 
-                
-                
-            
-                        
-                        
-            
-    pygame.display.update()
-   
+
+                #移动
+                player.x=road[player.position].x
+                player.y=road[player.position].y
+
+                player.position+=dice
+                if(player.position>23):
+                    player.position-=24
+
+
+                clock = pygame.time.Clock()
+                #move
+                while (abs(player.x-road[player.position].x)>error or abs(player.y-road[player.position].y)>error):
+
+                    show()
+                    show_pos(player)
+                    screen.blit(font_dice.render(str(dice),True,(0,0,0)),(150,130))
+                    screen.blit(player.person,(player.x,player.y))
+                    time_passed=clock.tick()
+                    time_passed_seconds=time_passed/1000.0
+                    distance_moved = time_passed_seconds*speed
+
+                    if(abs(player.y-0)<error and player.x<480):
+                        player.x+=distance_moved
+                    if(abs(player.x-480)<error and player.y<480):
+                        player.y+=distance_moved
+                    if(abs(player.y-480)<error and player.x>0):
+                        player.x-=distance_moved
+                    if(abs(player.x-0)<error and player.y>0):
+                        player.y-=distance_moved
+
+                    pygame.display.update()
+
+
+                easy()
+
+
+                if(road[player.position].__class__==supermarket):
+                    screen.blit(font.render("what do you want to buy? ",True,(0,0,0)),question)
+                    screen.blit(font.render("diamond <- or star ->",True,(0,0,0)),question2)
+                    pygame.display.update()
+                elif(road[player.position].__class__==bank):
+                    player.get()
+
+                elif(road[player.position].area.owner==0 and player.money>=road[player.position].money and player.diamond>=road[player.position].diamond):
+                    screen.blit(font.render("Do you want buy the area with",True,(0,0,0)),question)
+                    screen.blit(font.render('$ '+str(road[player.position].money)+" and "+str(road[player.position].diamond)+" diamonds?",True,(0,0,0)),question2)
+                    screen.blit(font.render("Press Y if you would like to ",True,(0,0,0)),question3)
+                    pygame.display.update()
+                elif(road[player.position].area.owner!=0 and road[player.position].area.owner!=player):
+                    screen.blit(font.render("You must pay "+str(road[player.position].area.owner.name)+" "+str(road[player.position].grade*100),True,(0,0,0)),question)
+                    player.pay(road[player.position].area.owner,road[player.position])
+                    pygame.display.update()
+
+                elif(road[player.position].area.owner==player and road[player.position].grade==0):
+                    screen.blit(font.render("Do you want build house with $200? ",True,(0,0,0)),question1)
+                    screen.blit(font.render("Press Y if you would like to ",True,(0,0,0)),question2)
+                    pygame.display.update()
+                elif(road[player.position].area.owner==player and road[player.position].grade>0):
+                    screen.blit(font.render("Do you want upgrade the house? ",True,(0,0,0)),question1)
+                    screen.blit(font.render("Press Y if you would like to ",True,(0,0,0)),question2)
+                    pygame.display.update()
+
+
+            elif event.type==KEYDOWN:
+                if(road[player.position].__class__==supermarket):
+                    screen.blit(font.render("what do you want to buy? ",True,(0,0,0)),question)
+                    screen.blit(font.render("diamond <- or star ->",True,(0,0,0)),question2)
+                    pygame.display.update()
+                    ans1=(input(event)=='left')
+                    ans2=(input(event)=='right')
+                    player.buy_goods(ans1,ans2)
+                elif(road[player.position].__class__==bank):
+                    player.get()
+                elif(road[player.position].area.owner==0 and player.money>=road[player.position].money and player.diamond>=road[player.position].diamond):
+                    screen.blit(font.render("Do you want buy the area with",True,(0,0,0)),question)
+                    screen.blit(font.render('$ '+str(road[player.position].money)+" and "+str(road[player.position].diamond)+" diamonds?",True,(0,0,0)),question2)
+                    screen.blit(font.render("Press Y if you would like to ",True,(0,0,0)),question3)
+                    pygame.display.update()
+                    ans=(input(event)=='y')
+                    player.buy_cell(road[player.position],ans)
+                elif(road[player.position].area.owner==player  and road[player.position].grade==0):
+                    screen.blit(font.render("Do you want build house with $200 ? ",True,(0,0,0)),question1)
+                    screen.blit(font.render("Press Y if you would like to ",True,(0,0,0)),question2)
+                    ans=(input(event)=='y')
+                    player.build(road[player.position],ans)
+                elif(road[player.position].area.owner==player and road[player.position].grade>0):
+                    screen.blit(font.render("Do you want upgrade the house? ",True,(0,0,0)),question1)
+                    screen.blit(font.render("Press Y if you would like to ",True,(0,0,0)),question2)
+                    ans=(input(event)=='y')
+                    player.upgrade(road[player.position],ans)
+                easy()
+
+
+            else:
+                continue
+
+        pygame.display.update()
+
+main()
